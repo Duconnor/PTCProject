@@ -1,11 +1,11 @@
 ; the finite set of states
-#Q = {s1,s11,s12,s13,s1r,s1a,s2,s21,s22,s23,s24,s25,s26,s27,s28,s29,s2a,s2r,s3,s4,accept,reject}
+#Q = {s1,s11,s12,s13,s1r,s1a,s2,s21,s22,s23,s24,s25,s26,s27,s28,s29,s2a,s2r,s3,s4,accept,reject,agol,rgol,acla,rcla,wt1,wt2,wt3,wt4,wf1,wf2,wf3,wf4,wf5,acceptend,rejectend}
 
 ; the finite set of input symbols
 #S = {1,x,=}
 
 ; the complete set of tape symbols
-#T = {1,x,=,0,#,_}
+#T = {1,x,=,0,#,_,T,r,u,e,F,a,l,s}
 
 ; the start state
 #q0 = s1
@@ -14,9 +14,9 @@
 #B = _
 
 ; the set of final states
-#F = {accept}
+#F = {acceptend}
 
-; the transition fuctions
+; the transition functions
 
 ; start state, enter TM1
 s1 * * * s11
@@ -80,3 +80,29 @@ s4 # # * accept
 s4 _ _ * accept
 s4 1 1 * reject
 
+; write True
+accept * * * agol ; go to the left end
+agol * * l agol
+agol _ _ r acla ; go to cla(clear all) state
+acla * _ r acla
+acla _ _ l wt1
+wt1 _ T r wt2
+wt2 _ r r wt3
+wt3 _ u r wt4
+wt4 _ e r acceptend
+
+; write False
+; let all reject state sink to one state
+s1r * * * reject
+s2r * * * reject
+; same as above
+reject * * * rgol
+rgol * * l rgol
+rgol _ _ r rcla
+rcla * _ r rcla
+rcla _ _ l wf1
+wf1 _ F r wf2
+wf2 _ a r wf3
+wf3 _ l r wf4
+wf4 _ s r wf5
+wf5 _ e r rejectend

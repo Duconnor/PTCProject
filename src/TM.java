@@ -1,3 +1,4 @@
+import java.io.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -67,7 +68,7 @@ public class TM {
     private int headIndex; // the index of the read-write head
     private int startIndex; // the index of the start point
 
-    TM() {
+    private TM() {
         stateSet = new HashSet<>();
         inputSymbolSet = new HashSet<>();
         tapeSymbolSet = new HashSet<>();
@@ -166,7 +167,7 @@ public class TM {
             String symbol = tape.get(i);
             if (i != tape.size() - 1) {
                 System.out.print(symbol);
-                printSpace(howManyDigits(Math.abs(i-startIndex)));
+                printSpace(howManyDigits(Math.abs(i - startIndex)));
             } else
                 System.out.print(symbol);
         }
@@ -198,7 +199,10 @@ public class TM {
                 return false; // can't move further
         }
         // second, move accordingly
-        currentState = output.nextState; // change state
+        if (stateSet.contains(output.nextState))
+            currentState = output.nextState; // change state
+        else
+            System.exit(0); // must be error in tm file
         if (output.newSymbol.compareTo("*") != 0)
             tape.set(headIndex, output.newSymbol); // write symbol on tape
         if (output.direction == Direction.L)
@@ -215,7 +219,7 @@ public class TM {
         return true;
     }
 
-    public void createFromFile(String filename) {
+    private void createFromFile(String filename) {
         // create a TM from file (.tm)
         TMParser tmParser = new TMParser(filename);
         // state set
@@ -238,8 +242,8 @@ public class TM {
         }
     }
 
-    public void run(String input) {
-        boolean illegal = false;
+    public int run(String input) {
+        // return: -1 for error, 1 for accept, 0 for reject
         System.out.println("Input: " + input);
         String delimOne = "====================";
         String delimTwo = "---------------------------------------------";
@@ -249,40 +253,92 @@ public class TM {
             if (!inputSymbolSet.contains(String.valueOf(c))) {
                 System.out.println(delimOne + " ERR " + delimOne);
                 System.out.println("The input \"" + input + "\" is illegal");
-                illegal = true;
                 System.out.println(delimOne + " END " + delimOne);
+                return -1;
             }
         }
-        if (!illegal) {
-            // we now know the input is legal
-            currentState = initialState;
-            for (char c : inputArray)
-                tape.add(String.valueOf(c));
-            if (inputArray.length == 0)
-                tape.add(blank);
-            step = 0;
-            headIndex = startIndex = 0;
-            System.out.println(delimOne + "RUN" + delimOne);
+        // we now know the input is legal
+        currentState = initialState;
+        for (char c : inputArray)
+            tape.add(String.valueOf(c));
+        if (inputArray.length == 0)
+            tape.add(blank);
+        step = 0;
+        headIndex = startIndex = 0;
+        System.out.println(delimOne + " RUN " + delimOne);
+        printID();
+        System.out.println(delimTwo);
+        while (oneMove()) {
             printID();
             System.out.println(delimTwo);
-            while (oneMove()) {
-                printID();
-                System.out.println(delimTwo);
-            }
-            System.out.print("Result: ");
-            for (String symbol : tape)
-                if (symbol.compareTo(blank) != 0)
-                    System.out.print(symbol);
-            System.out.println();
-            System.out.println(delimOne + "END" + delimOne);
         }
+        System.out.print("Result: ");
+        for (String symbol : tape)
+            if (symbol.compareTo(blank) != 0)
+                System.out.print(symbol);
+        System.out.println();
+        System.out.println(delimOne + " END " + delimOne);
+        return finalStateSet.contains(currentState) ? 1 : 0;
+    }
+
+    private void clear() {
+        currentState = null;
+        tape.clear();
+        step = 0;
+        headIndex = startIndex = 0;
     }
 
     public static void main(String[] args) {
-        TM tm = new TM();
+/*        TM tm = new TM();
         //tm.createFromFile("./TM/palindrome_detector.tm");
-        tm.createFromFile("./TM/palindrome_detector.tm");
+        tm.createFromFile("case1/test.tm");
         tm.run("");
-        //tm.run("1001");
+        //tm.run("1001");*/
+        String directory = args[0];
+        TM tm = new TM();
+        tm.createFromFile("./" + directory + "/test.tm");
+        File inputFile = new File("./" + directory + "/input.txt");
+        File console = new File("./" + directory + "/console.txt");
+        File result = new File("./" + directory + "/result.txt");
+        BufferedWriter bufferedWriter = null;
+        BufferedReader bufferedReader = null;
+        PrintStream printStream = null;
+        try {
+            bufferedReader = new BufferedReader(new FileReader(inputFile));
+            bufferedWriter = new BufferedWriter(new FileWriter(result, false));
+            printStream = new PrintStream(new FileOutputStream(console, false));
+            System.setOut(printStream);
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                int accept = tm.run(line);
+                switch (accept) {
+                    case -1:
+                        bufferedWriter.write("Error\n");
+                        break;
+                    case 0:
+                        bufferedWriter.write("False\n");
+                        break;
+                    case 1:
+                        bufferedWriter.write("True\n");
+                        break;
+                    default:
+                        break;
+                }
+                tm.clear();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (bufferedWriter != null)
+                    bufferedWriter.close();
+                if (bufferedReader != null)
+                    bufferedReader.close();
+                if (printStream != null)
+                    printStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
