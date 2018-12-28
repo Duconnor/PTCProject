@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class TMParser {
-    private static final String parseString = "[ {},=]";
+    private static final String parseStringOne = "[ {}]";
+    private static final String parseStringTwo = "[ ,]";
     private ArrayList<String> TMDescriptor;
 
     TMParser(String fileName) {
@@ -38,6 +39,13 @@ public class TMParser {
         return result;
     }
 
+    private Iterable<String> parse(String[] preparsed) {
+        for (String s : preparsed)
+            if (s.compareTo("") != 0 && s.compareTo("=") != 0)
+                return removeEmpty(s.split(parseStringTwo));
+        return null;
+    }
+
     public Iterable<String> getStates() {
         // return all states
         String statesRaw = null;
@@ -50,8 +58,8 @@ public class TMParser {
             System.out.println("Parsing error! State set not found!");
             System.exit(0);
         }
-        String[] parsedStates = statesRaw.split(parseString);
-        return removeEmpty(parsedStates);
+        String[] parsedStates = statesRaw.split(parseStringOne);
+        return parse(parsedStates);
     }
 
     public Iterable<String> getInputSymbols() {
@@ -66,8 +74,8 @@ public class TMParser {
             System.out.println("Parsing error! Input symbol set not found!");
             System.exit(0);
         }
-        String[] parsedInputSymbols = inputSymbolsRaw.split(parseString);
-        return removeEmpty(parsedInputSymbols);
+        String[] parsedInputSymbols = inputSymbolsRaw.split(parseStringOne);
+        return parse(parsedInputSymbols);
     }
 
     public Iterable<String> getTapeSymbols() {
@@ -82,8 +90,8 @@ public class TMParser {
             System.out.println("Parsing error! Tape symbol set not found!");
             System.exit(0);
         }
-        String[] parsedTapeSymbols = tapeSymbolsRaw.split(parseString);
-        return removeEmpty(parsedTapeSymbols);
+        String[] parsedTapeSymbols = tapeSymbolsRaw.split(parseStringOne);
+        return parse(parsedTapeSymbols);
     }
 
     public String getInitialState() {
@@ -98,13 +106,11 @@ public class TMParser {
             System.out.println("Parsing error! Initial state not found!");
             System.exit(0);
         }
-        String[] parsedInitialState = initialStateRaw.split(parseString);
-        String initialState = "";
-        for (String s : parsedInitialState) {
-            if (s.compareTo("") != 0)
-                initialState = s;
-        }
-        return initialState;
+        String[] parsedInitialState = initialStateRaw.split(parseStringOne);
+        for (String s : parsedInitialState)
+            if (s.compareTo("") != 0 && s.compareTo("=") != 0)
+                return s;
+        return null;
     }
 
     public Iterable<String> getFinalStates() {
@@ -119,8 +125,8 @@ public class TMParser {
             System.out.println("Parsing error! Final state set not found!");
             System.exit(0);
         }
-        String[] parsedFinalStates = finalStatesRaw.split(parseString);
-        return removeEmpty(parsedFinalStates);
+        String[] parsedFinalStates = finalStatesRaw.split(parseStringOne);
+        return parse(parsedFinalStates);
     }
 
     public Iterable<String[]> getTransitionFunctions() {

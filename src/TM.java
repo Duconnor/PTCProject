@@ -166,7 +166,7 @@ public class TM {
             String symbol = tape.get(i);
             if (i != tape.size() - 1) {
                 System.out.print(symbol);
-                printSpace(howManyDigits(i));
+                printSpace(howManyDigits(Math.abs(i-startIndex)));
             } else
                 System.out.print(symbol);
         }
@@ -177,7 +177,7 @@ public class TM {
                 System.out.println("^");
                 break;
             } else {
-                printSpace(howManyDigits(i) + 1);
+                printSpace(howManyDigits(Math.abs(i - startIndex)) + 1);
             }
         }
         System.out.println("State: " + currentState);
@@ -258,6 +258,8 @@ public class TM {
             currentState = initialState;
             for (char c : inputArray)
                 tape.add(String.valueOf(c));
+            if (inputArray.length == 0)
+                tape.add(blank);
             step = 0;
             headIndex = startIndex = 0;
             System.out.println(delimOne + "RUN" + delimOne);
@@ -278,7 +280,9 @@ public class TM {
 
     public static void main(String[] args) {
         TM tm = new TM();
+        //tm.createFromFile("./TM/palindrome_detector.tm");
         tm.createFromFile("./TM/palindrome_detector.tm");
-        tm.run("1111000000001111");
+        tm.run("");
+        //tm.run("1001");
     }
 }
